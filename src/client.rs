@@ -9,9 +9,9 @@ use crate::signature::{canonical, new_nonce, sign};
 use crate::types::{
     Customer, EntitlementsResponse, IssuedDownload, IssuedTrial, LicenseActivatePayload,
     LicenseActivateResponse, LicenseCheckPayload, LicenseCheckResponse, LicensePublicKeysResponse,
-    LicenseRefreshPayload, LicenseSyncUsagePayload, LicenseSyncUsageResponse, OtpRequestPayload,
-    OtpVerifyPayload, OtpVerifyResponse, PlansResponse, PortalLink, ReleaseManifest, UsagePayload,
-    UsageResponse,
+    LicenseRefreshPayload, LicenseSyncUsagePayload, LicenseSyncUsageResponse, OauthExchangePayload,
+    OauthExchangeResponse, OauthProvidersResponse, OtpRequestPayload, OtpVerifyPayload,
+    OtpVerifyResponse, PlansResponse, PortalLink, ReleaseManifest, UsagePayload, UsageResponse,
 };
 
 const H_PRODUCT: HeaderName = HeaderName::from_static("x-akira-product");
@@ -131,14 +131,29 @@ impl Client {
             .await
     }
 
-    /// POST /api/licenses/sync-usage — apply local usage deltas and receive re-signed snapshot.
-    /// offline_snapshot products only.
     pub async fn license_sync_usage(
         &self,
         payload: LicenseSyncUsagePayload<'_>,
     ) -> Result<LicenseSyncUsageResponse, Error> {
         self.do_request::<_, LicenseSyncUsageResponse>(Method::POST, "/api/licenses/sync-usage", Some(&payload))
             .await
+    }
+
+    pub async fn list_oauth_providers(&self, product: &str) -> Result<OauthProvidersResponse, Error> {
+        let path = format!("/api/v1/products/{}/auth/providers", urlencode(product));
+        self.do_request::<_, OauthProvidersResponse>(Method::GET, &path, None::<&()>).await
+    }
+
+    pub async fn exchange_oauth_code(
+        &mut self,
+        payload: OauthExchangePayload<'_>,
+    ) -> Result<OauthExchangeResponse, Error> {
+        let resp = self
+            .do_request::<_, OauthExchangeResponse>(Method::POST, "/api/auth/oauth/exchange", Some(&payload))
+            .await?;
+        self.set_customer_token(resp.access_token.clone());
+
+        Ok(resp)
     }
 
     /// GET /api/me/entitlements — full customer entitlement + device snapshot.

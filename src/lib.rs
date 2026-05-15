@@ -6,6 +6,7 @@
 pub mod client;
 pub mod error;
 pub mod license;
+pub mod oauth;
 pub mod signature;
 pub mod types;
 
@@ -14,5 +15,9 @@ pub use error::Error;
 pub use license::{
     can_use_update, compute_remaining, decode_license, is_expired, is_in_grace, period_reset_at,
     verify_license, DecodedLicense, RemainingValue,
+};
+pub use oauth::{
+    build_oauth_init_url, generate_oauth_state, generate_pkce_challenge, BuildOauthInitUrl,
+    PkceChallenge,
 };
 pub use signature::{canonical, new_nonce, sign, HEADER_NONCE, HEADER_PRODUCT, HEADER_SIGNATURE, HEADER_TIMESTAMP};

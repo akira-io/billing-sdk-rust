@@ -4,6 +4,23 @@ All notable changes to `akira-billing` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the crate adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.7] — 2026-05-15
+
+### Added
+
+- New `oauth` module with `generate_pkce_challenge`,
+  `generate_oauth_state`, and `build_oauth_init_url` helpers for the
+  Authorization Code + PKCE flow brokered by billing.
+- `Client::list_oauth_providers(product)` returns the enabled
+  providers + scopes for a product.
+- `Client::exchange_oauth_code(payload)` redeems a one-time code for
+  a customer access token and stores it on the client.
+- Types: `OauthProvider`, `OauthProviderInfo`, `OauthProvidersResponse`,
+  `OauthExchangePayload`, `OauthExchangeResponse`, `PkceChallenge`,
+  `BuildOauthInitUrl`.
+
+[0.1.7]: https://github.com/akira-io/billing-sdk-rust/releases/tag/v0.1.7
+
 ## [0.1.6] — 2026-05-15
 
 ### Added

@@ -314,3 +314,46 @@ pub struct LicenseSyncUsageResponse {
     pub applied: std::collections::HashMap<String, u64>,
     pub serial: u64,
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum OauthProvider {
+    Google,
+    GitHub,
+    Apple,
+    Microsoft,
+    GitLab,
+    Bitbucket,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct OauthProviderInfo {
+    pub provider: OauthProvider,
+    pub label: String,
+    pub scopes: Vec<String>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct OauthProvidersResponse {
+    pub product: String,
+    pub providers: Vec<OauthProviderInfo>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct OauthExchangePayload<'a> {
+    pub code: &'a str,
+    pub code_verifier: &'a str,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct OauthExchangeCustomer {
+    pub id: String,
+    pub product_id: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct OauthExchangeResponse {
+    pub access_token: String,
+    pub token_type: String,
+    pub customer: OauthExchangeCustomer,
+}
