@@ -4,6 +4,17 @@ All notable changes to `akira-billing` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the crate adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.4] — 2026-05-15
+
+### Changed
+
+- Republish of 0.1.3 contents under a fresh version. The v0.1.3 tag
+  was never uploaded to crates.io because the crate had no publish
+  workflow at the time; this release exists to drive the new
+  Trusted Publishing pipeline end-to-end. No code or API changes.
+
+[0.1.4]: https://github.com/akira-io/billing-sdk-rust/releases/tag/v0.1.4
+
 ## [0.1.3] — 2026-05-15
 
 ### Added
