@@ -134,10 +134,19 @@ pub fn is_in_grace(
 }
 
 pub fn can_use_update(payload: &LicenseSnapshotPayload, release_date: DateTime<Utc>) -> bool {
-    let Some(paid_up) = payload.paid_up_until.as_deref().and_then(parse_iso) else {
-        return true;
+    let paid_up = payload.paid_up_until.as_deref().and_then(parse_iso);
+    let fallback = payload.fallback_release_date.as_deref().and_then(parse_iso);
+
+    let effective = match (paid_up, fallback) {
+        (None, None) => return true,
+        (Some(a), None) => a,
+        (None, Some(b)) => b,
+        (Some(a), Some(b)) => a.max(b),
     };
-    release_date <= paid_up
+
+    let window_days = payload.updates_window_days.unwrap_or(0) as i64;
+    let cutoff = effective + chrono::Duration::days(window_days);
+    release_date <= cutoff
 }
 
 pub fn period_reset_at(payload: &LicenseSnapshotPayload, feature: &str) -> Option<DateTime<Utc>> {

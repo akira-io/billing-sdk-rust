@@ -4,6 +4,23 @@ All notable changes to `akira-billing` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the crate adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.6] — 2026-05-15
+
+### Added
+
+- `LicenseSnapshotPayload.updates_window_days` and
+  `LicenseSnapshotPayload.offline_grace_days` carried through from the
+  plan-level overrides on the billing server.
+
+### Changed
+
+- `can_use_update` now uses the maximum of `paid_up_until` and
+  `fallback_release_date`, extended by `updates_window_days`, before
+  comparing against the release date. Snapshots without any of the
+  three fields still allow all releases.
+
+[0.1.6]: https://github.com/akira-io/billing-sdk-rust/releases/tag/v0.1.6
+
 ## [0.1.5] — 2026-05-15
 
 ### Changed

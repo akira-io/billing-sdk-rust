@@ -294,6 +294,10 @@ pub struct LicenseSnapshotPayload {
     pub paid_up_until: Option<String>,
     #[serde(default)]
     pub fallback_release_date: Option<String>,
+    #[serde(default)]
+    pub updates_window_days: Option<u32>,
+    #[serde(default)]
+    pub offline_grace_days: Option<u32>,
 }
 
 #[derive(Debug, Clone, Serialize)]

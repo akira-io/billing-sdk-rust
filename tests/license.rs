@@ -37,6 +37,8 @@ fn base_payload() -> LicenseSnapshotPayload {
         valid_until: "2026-05-29T10:00:00+00:00".into(),
         paid_up_until: Some("2027-05-15T00:00:00+00:00".into()),
         fallback_release_date: Some("2027-05-15T00:00:00+00:00".into()),
+        updates_window_days: None,
+        offline_grace_days: None,
     }
 }
 
@@ -135,6 +137,23 @@ fn can_use_update_respects_paid_up() {
     let p = base_payload();
     assert!(can_use_update(&p, "2027-01-01T00:00:00Z".parse().unwrap()));
     assert!(!can_use_update(&p, "2028-01-01T00:00:00Z".parse().unwrap()));
+}
+
+#[test]
+fn can_use_update_extends_with_window() {
+    let mut p = base_payload();
+    p.updates_window_days = Some(365);
+    assert!(can_use_update(&p, "2027-06-01T00:00:00Z".parse().unwrap()));
+    assert!(can_use_update(&p, "2028-04-01T00:00:00Z".parse().unwrap()));
+    assert!(!can_use_update(&p, "2028-12-01T00:00:00Z".parse().unwrap()));
+}
+
+#[test]
+fn can_use_update_uses_max_of_paid_up_and_fallback() {
+    let mut p = base_payload();
+    p.paid_up_until = Some("2026-01-01T00:00:00+00:00".into());
+    p.fallback_release_date = Some("2027-12-31T00:00:00+00:00".into());
+    assert!(can_use_update(&p, "2027-06-01T00:00:00Z".parse().unwrap()));
 }
 
 #[test]
