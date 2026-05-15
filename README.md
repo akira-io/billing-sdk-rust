@@ -4,8 +4,10 @@ Rust client for the [Akira Billing API](https://github.com/akira-foundation/bill
 Sister crate of [`billing-sdk-go`](https://github.com/akira-io/billing-sdk-go);
 both consume the same wire protocol and pass the same fixture vectors.
 
-Handles request signing, OTP login, license activation, trial start, and
-plans listing. Async via `reqwest` + `tokio`.
+Handles request signing, OTP login, full license lifecycle (check / activate
+/ refresh), entitlements, customer profile, billing portal, per-day usage
+tracking, downloads, trial start, and plans listing. Async via `reqwest` +
+`tokio`.
 
 ## Install
 
@@ -89,10 +91,21 @@ underneath pools connections via `reqwest`.
 | `request_otp(payload)`              | `POST /api/auth/customer/otp/request`          | HMAC only     |
 | `verify_otp(payload)`               | `POST /api/auth/customer/otp/verify`           | HMAC only     |
 | `start_trial(plan_key)`             | `POST /api/v1/me/products/{key}/trial`         | HMAC + bearer |
+| `customer_me()`                     | `GET  /api/me`                                 | HMAC + bearer |
+| `license_check(payload)`            | `POST /api/licenses/check`                     | HMAC + bearer |
+| `license_activate(payload)`         | `POST /api/licenses/activate`                  | HMAC + bearer |
+| `license_refresh(payload)`          | `POST /api/licenses/refresh`                   | HMAC + bearer |
+| `entitlements()`                    | `GET  /api/me/entitlements`                    | HMAC + bearer |
+| `billing_portal(return_url)`        | `GET  /api/billing/portal`                     | HMAC + bearer |
+| `track_usage(payload)`              | `POST /api/me/usage`                           | HMAC + bearer |
+| `latest_release(channel)`           | `GET  /api/v1/downloads/{product}/releases/{channel}/latest` | HMAC only |
+| `issue_download(channel, platform)` | `GET  /api/v1/downloads/{product}/{channel}/{platform}`      | HMAC only |
+| `complete_download(beacon_url)`     | `POST` to the absolute beacon URL              | unsigned beacon |
+| `public_license_keys()`             | `GET  /api/v1/license-keys/public`             | unsigned      |
 
-For routes the SDK has not yet typed (license activate/refresh, checkout,
-etc.) drop down to `signature::{canonical, sign, new_nonce}` and build the
-request manually; the helpers are public.
+For routes the SDK has not yet typed drop down to
+`signature::{canonical, sign, new_nonce}` and build the request manually; the
+helpers are public.
 
 ## Error handling
 

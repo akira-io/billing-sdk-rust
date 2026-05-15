@@ -10,7 +10,7 @@ use crate::types::{
     Customer, EntitlementsResponse, IssuedDownload, IssuedTrial, LicenseActivatePayload,
     LicenseActivateResponse, LicenseCheckPayload, LicenseCheckResponse, LicensePublicKeysResponse,
     LicenseRefreshPayload, OtpRequestPayload, OtpVerifyPayload, OtpVerifyResponse, PlansResponse,
-    PortalLink, ReleaseManifest,
+    PortalLink, ReleaseManifest, UsagePayload, UsageResponse,
 };
 
 const H_PRODUCT: HeaderName = HeaderName::from_static("x-akira-product");
@@ -143,6 +143,12 @@ impl Client {
             urlencode(return_url),
         );
         self.do_request::<_, PortalLink>(Method::GET, &path, None::<&()>).await
+    }
+
+    /// POST /api/me/usage — check or increment per-day usage counter.
+    pub async fn track_usage(&self, payload: UsagePayload<'_>) -> Result<UsageResponse, Error> {
+        self.do_request::<_, UsageResponse>(Method::POST, "/api/me/usage", Some(&payload))
+            .await
     }
 
     /// GET /api/v1/license-keys/public — list registered Ed25519 verification keys.

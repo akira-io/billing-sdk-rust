@@ -213,3 +213,19 @@ pub struct LicensePublicKeysResponse {
     pub keys: Vec<LicensePublicKey>,
     pub active_key_id: Option<String>,
 }
+
+#[derive(Debug, Clone, Serialize)]
+pub struct UsagePayload<'a> {
+    pub product: &'a str,
+    pub feature: &'a str,
+    pub date: &'a str,
+    pub device_fp: &'a str,
+    pub action: &'a str,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct UsageResponse {
+    pub count: u32,
+    pub limit: Option<u32>,
+    pub allowed: bool,
+}
