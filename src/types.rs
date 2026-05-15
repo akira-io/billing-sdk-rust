@@ -222,6 +222,8 @@ pub struct UsagePayload<'a> {
     pub device_fp: &'a str,
     pub action: &'a str,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub count: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub platform: Option<&'a str>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub device_type: Option<&'a str>,
@@ -233,5 +235,78 @@ pub struct UsagePayload<'a> {
 pub struct UsageResponse {
     pub count: u32,
     pub limit: Option<u32>,
+    #[serde(default)]
+    pub period: Option<String>,
     pub allowed: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum LicensingMode {
+    OfflineSnapshot,
+    OnlineRealtime,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum UsagePeriod {
+    Daily,
+    Weekly,
+    Monthly,
+    Yearly,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum UsageFeatureState {
+    Bool {
+        enabled: bool,
+    },
+    Counter {
+        allowance: u64,
+        period: UsagePeriod,
+        period_start: String,
+        period_end: String,
+        consumed_at_issue: u64,
+    },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LicenseSnapshotPayload {
+    #[serde(default)]
+    pub v: Option<u32>,
+    pub key_id: String,
+    pub customer_id: String,
+    pub product_key: String,
+    pub plan_key: String,
+    #[serde(default)]
+    pub licensing_mode: Option<LicensingMode>,
+    #[serde(default)]
+    pub features: std::collections::HashMap<String, bool>,
+    #[serde(default)]
+    pub usage: std::collections::HashMap<String, UsageFeatureState>,
+    pub fingerprint_hash: String,
+    #[serde(default)]
+    pub serial: u64,
+    pub issued_at: String,
+    pub valid_until: String,
+    #[serde(default)]
+    pub paid_up_until: Option<String>,
+    #[serde(default)]
+    pub fallback_release_date: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct LicenseSyncUsagePayload<'a> {
+    pub product: &'a str,
+    pub fingerprint: &'a str,
+    pub serial: u64,
+    pub deltas: std::collections::HashMap<String, u64>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct LicenseSyncUsageResponse {
+    pub license: SignedLicense,
+    pub applied: std::collections::HashMap<String, u64>,
+    pub serial: u64,
 }

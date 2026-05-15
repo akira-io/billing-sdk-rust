@@ -4,6 +4,28 @@ All notable changes to `akira-billing` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the crate adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] — 2026-05-15
+
+### Added
+
+- New `license` module with helpers for `offline_snapshot` products:
+  `decode_license`, `verify_license` (Ed25519 via `ed25519-dalek`),
+  `compute_remaining`, `is_expired`, `is_in_grace`, `can_use_update`,
+  `period_reset_at`. `RemainingValue` enum distinguishes finite
+  counters from unlimited features.
+- `Client::license_sync_usage` POST `/api/licenses/sync-usage` to
+  apply local usage deltas and receive a re-signed snapshot.
+- `UsagePayload.count: Option<u32>` for variable-count realtime
+  tracking (e.g. AI token usage).
+- Types: `LicensingMode`, `UsagePeriod`, `UsageFeatureState`,
+  `LicenseSnapshotPayload`, `LicenseSyncUsagePayload`,
+  `LicenseSyncUsageResponse`.
+
+### Dependencies
+
+- Added `base64 = 0.22`, `chrono = 0.4` (with `serde`),
+  `ed25519-dalek = 2`.
+
 ## [0.1.2] — 2026-05-15
 
 ### Added

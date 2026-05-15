@@ -95,9 +95,10 @@ underneath pools connections via `reqwest`.
 | `license_check(payload)`            | `POST /api/licenses/check`                     | HMAC + bearer |
 | `license_activate(payload)`         | `POST /api/licenses/activate`                  | HMAC + bearer |
 | `license_refresh(payload)`          | `POST /api/licenses/refresh`                   | HMAC + bearer |
+| `license_sync_usage(payload)`       | `POST /api/licenses/sync-usage` (offline mode) | HMAC + bearer |
 | `entitlements()`                    | `GET  /api/me/entitlements`                    | HMAC + bearer |
 | `billing_portal(return_url)`        | `GET  /api/billing/portal`                     | HMAC + bearer |
-| `track_usage(payload)`              | `POST /api/me/usage`                           | HMAC + bearer |
+| `track_usage(payload)`              | `POST /api/me/usage` (variable `count`)        | HMAC + bearer |
 | `latest_release(channel)`           | `GET  /api/v1/downloads/{product}/releases/{channel}/latest` | HMAC only |
 | `issue_download(channel, platform)` | `GET  /api/v1/downloads/{product}/{channel}/{platform}`      | HMAC only |
 | `complete_download(beacon_url)`     | `POST` to the absolute beacon URL              | unsigned beacon |
@@ -123,6 +124,83 @@ match client.plans().await {
     Err(Error::Transport(e)) => eprintln!("network error: {e}"),
     Err(e) => return Err(e.into()),
 }
+```
+
+## Licensing modes
+
+Products are tagged server-side with a `licensing_mode`:
+
+| Mode | When to use | Client flow |
+|---|---|---|
+| `offline_snapshot` | Desktop apps. Long-lived entitlement, infrequent sync. | Refresh signed snapshot, decrement local counter, sync deltas periodically. |
+| `online_realtime` | Pay-per-unit (AI tokens, API calls). | Pre-check budget + post-commit actual `count`. |
+
+### Offline snapshot helpers
+
+`license` module exports `decode_license`, `verify_license` (Ed25519 via
+`ed25519-dalek`), `compute_remaining`, `is_expired`, `is_in_grace`,
+`can_use_update`, `period_reset_at`.
+
+```rust
+use akira_billing::{Client, license, RemainingValue};
+use akira_billing::types::{LicenseRefreshPayload, LicenseSyncUsagePayload};
+use std::collections::HashMap;
+
+let resp = client.license_refresh(LicenseRefreshPayload {
+    product: "maintainer",
+    fingerprint: &fp,
+}).await?;
+
+let decoded = license::decode_license(&resp.license)?;
+
+let keys = client.public_license_keys().await?;
+let ok = license::verify_license(&resp.license, &keys.keys[0].public_key_base64)?;
+if !ok { panic!("forged license") }
+
+match license::compute_remaining(&decoded.payload, "agent_run", local_consumed) {
+    Some(RemainingValue::Finite(0)) => return Err("limit reached".into()),
+    Some(RemainingValue::Finite(n)) => println!("{n} remaining"),
+    Some(RemainingValue::Unlimited)  => {},
+    None => return Err("unknown feature".into()),
+}
+
+let mut deltas = HashMap::new();
+deltas.insert("agent_run".to_string(), 3u64);
+let next = client.license_sync_usage(LicenseSyncUsagePayload {
+    product: "maintainer",
+    fingerprint: &fp,
+    serial: decoded.payload.serial,
+    deltas,
+}).await?;
+```
+
+### Online realtime (variable `count`)
+
+```rust
+use akira_billing::types::UsagePayload;
+
+let pre = client.track_usage(UsagePayload {
+    product: "aisite",
+    feature: "llm_tokens",
+    date: "2026-05-15",
+    device_fp: &fp,
+    action: "check",
+    count: Some(4000),
+    platform: None,
+    device_type: None,
+    app_version: None,
+}).await?;
+if !pre.allowed { return Err("budget exhausted".into()); }
+
+// run LLM, get actual tokens
+let actual = 1247u32;
+client.track_usage(UsagePayload {
+    action: "increment",
+    count: Some(actual),
+    // ... same fields
+    product: "aisite", feature: "llm_tokens", date: "2026-05-15", device_fp: &fp,
+    platform: None, device_type: None, app_version: None,
+}).await?;
 ```
 
 ## Build-time secret injection

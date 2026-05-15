@@ -9,8 +9,9 @@ use crate::signature::{canonical, new_nonce, sign};
 use crate::types::{
     Customer, EntitlementsResponse, IssuedDownload, IssuedTrial, LicenseActivatePayload,
     LicenseActivateResponse, LicenseCheckPayload, LicenseCheckResponse, LicensePublicKeysResponse,
-    LicenseRefreshPayload, OtpRequestPayload, OtpVerifyPayload, OtpVerifyResponse, PlansResponse,
-    PortalLink, ReleaseManifest, UsagePayload, UsageResponse,
+    LicenseRefreshPayload, LicenseSyncUsagePayload, LicenseSyncUsageResponse, OtpRequestPayload,
+    OtpVerifyPayload, OtpVerifyResponse, PlansResponse, PortalLink, ReleaseManifest, UsagePayload,
+    UsageResponse,
 };
 
 const H_PRODUCT: HeaderName = HeaderName::from_static("x-akira-product");
@@ -127,6 +128,16 @@ impl Client {
         payload: LicenseRefreshPayload<'_>,
     ) -> Result<LicenseActivateResponse, Error> {
         self.do_request::<_, LicenseActivateResponse>(Method::POST, "/api/licenses/refresh", Some(&payload))
+            .await
+    }
+
+    /// POST /api/licenses/sync-usage — apply local usage deltas and receive re-signed snapshot.
+    /// offline_snapshot products only.
+    pub async fn license_sync_usage(
+        &self,
+        payload: LicenseSyncUsagePayload<'_>,
+    ) -> Result<LicenseSyncUsageResponse, Error> {
+        self.do_request::<_, LicenseSyncUsageResponse>(Method::POST, "/api/licenses/sync-usage", Some(&payload))
             .await
     }
 
