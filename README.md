@@ -1,7 +1,7 @@
 # akira-billing
 
 Rust client for the [Akira Billing API](https://github.com/akira-foundation/billing).
-Sister crate of [`billing-sdk-go`](https://github.com/akira-foundation/billing-sdk-go);
+Sister crate of [`billing-sdk-go`](https://github.com/akira-io/billing-sdk-go);
 both consume the same wire protocol and pass the same fixture vectors.
 
 Handles request signing, OTP login, license activation, trial start, and
@@ -11,7 +11,7 @@ plans listing. Async via `reqwest` + `tokio`.
 
 ```toml
 [dependencies]
-akira-billing = { git = "https://github.com/akira-foundation/billing-sdk-rust", tag = "v0.1.0" }
+akira-billing = { git = "https://github.com/akira-io/billing-sdk-rust", tag = "v0.1.0" }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 ```
 

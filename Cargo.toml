@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 description = "Go-Rust parity SDK for the Akira Billing API"
-repository = "https://github.com/akira-foundation/billing-sdk-rust"
+repository = "https://github.com/akira-io/billing-sdk-rust"
 
 [dependencies]
 hmac = "0.12"
