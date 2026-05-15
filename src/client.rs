@@ -151,6 +151,17 @@ impl Client {
             .await
     }
 
+    /// POST /api/v1/usage/anonymous — anonymous usage tracking (HMAC only, no bearer).
+    /// Use when the customer is not yet authenticated; the server applies the
+    /// limits defined on the product's anonymous_plan.
+    pub async fn track_anonymous_usage(
+        &self,
+        payload: UsagePayload<'_>,
+    ) -> Result<UsageResponse, Error> {
+        self.do_request::<_, UsageResponse>(Method::POST, "/api/v1/usage/anonymous", Some(&payload))
+            .await
+    }
+
     /// GET /api/v1/license-keys/public — list registered Ed25519 verification keys.
     /// Public endpoint, no HMAC or bearer required.
     pub async fn public_license_keys(&self) -> Result<LicensePublicKeysResponse, Error> {
