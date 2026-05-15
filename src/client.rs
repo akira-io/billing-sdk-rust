@@ -7,7 +7,8 @@ use serde::de::DeserializeOwned;
 use crate::error::Error;
 use crate::signature::{canonical, new_nonce, sign};
 use crate::types::{
-    Customer, EntitlementsResponse, IssuedDownload, IssuedTrial, LicenseActivatePayload,
+    Customer, EntitlementsResponse, GithubInstallationTokenPayload,
+    GithubInstallationTokenResponse, IssuedDownload, IssuedTrial, LicenseActivatePayload,
     LicenseActivateResponse, LicenseCheckPayload, LicenseCheckResponse, LicensePublicKeysResponse,
     LicenseRefreshPayload, LicenseSyncUsagePayload, LicenseSyncUsageResponse, OauthExchangePayload,
     OauthExchangeResponse, OauthProvidersResponse, OtpRequestPayload, OtpVerifyPayload,
@@ -154,6 +155,18 @@ impl Client {
         self.set_customer_token(resp.access_token.clone());
 
         Ok(resp)
+    }
+
+    pub async fn github_installation_token(
+        &self,
+        payload: GithubInstallationTokenPayload,
+    ) -> Result<GithubInstallationTokenResponse, Error> {
+        self.do_request::<_, GithubInstallationTokenResponse>(
+            Method::POST,
+            "/api/me/github/installation-token",
+            Some(&payload),
+        )
+        .await
     }
 
     /// GET /api/me/entitlements — full customer entitlement + device snapshot.

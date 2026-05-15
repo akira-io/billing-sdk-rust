@@ -348,7 +348,19 @@ pub struct OauthExchangePayload<'a> {
 #[derive(Debug, Clone, Deserialize)]
 pub struct OauthExchangeCustomer {
     pub id: String,
+    pub email: String,
+    #[serde(default)]
+    pub name: Option<String>,
     pub product_id: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct OauthExchangeEntitlement {
+    #[serde(default)]
+    pub plan_key: Option<String>,
+    pub source: String,
+    #[serde(default)]
+    pub ends_at: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -356,4 +368,23 @@ pub struct OauthExchangeResponse {
     pub access_token: String,
     pub token_type: String,
     pub customer: OauthExchangeCustomer,
+    #[serde(default)]
+    pub entitlement: Option<OauthExchangeEntitlement>,
+    #[serde(default)]
+    pub requires_plan_selection: bool,
+}
+
+#[derive(Debug, Clone, Default, Serialize)]
+pub struct GithubInstallationTokenPayload {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub installation_id: Option<u64>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct GithubInstallationTokenResponse {
+    pub token: String,
+    pub expires_at: String,
+    pub installation_id: i64,
+    pub account_login: String,
+    pub account_type: String,
 }
