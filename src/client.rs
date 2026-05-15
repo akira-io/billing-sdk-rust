@@ -7,8 +7,10 @@ use serde::de::DeserializeOwned;
 use crate::error::Error;
 use crate::signature::{canonical, new_nonce, sign};
 use crate::types::{
-    IssuedDownload, IssuedTrial, OtpRequestPayload, OtpVerifyPayload, OtpVerifyResponse,
-    PlansResponse, ReleaseManifest,
+    Customer, EntitlementsResponse, IssuedDownload, IssuedTrial, LicenseActivatePayload,
+    LicenseActivateResponse, LicenseCheckPayload, LicenseCheckResponse, LicensePublicKeysResponse,
+    LicenseRefreshPayload, OtpRequestPayload, OtpVerifyPayload, OtpVerifyResponse, PlansResponse,
+    PortalLink, ReleaseManifest,
 };
 
 const H_PRODUCT: HeaderName = HeaderName::from_static("x-akira-product");
@@ -96,6 +98,78 @@ impl Client {
         Ok(resp)
     }
 
+    /// GET /api/me — current authenticated customer.
+    pub async fn customer_me(&self) -> Result<Customer, Error> {
+        self.do_request::<_, Customer>(Method::GET, "/api/me", None::<&()>).await
+    }
+
+    /// POST /api/licenses/check — runtime feature gate check.
+    pub async fn license_check(
+        &self,
+        payload: LicenseCheckPayload<'_>,
+    ) -> Result<LicenseCheckResponse, Error> {
+        self.do_request::<_, LicenseCheckResponse>(Method::POST, "/api/licenses/check", Some(&payload))
+            .await
+    }
+
+    /// POST /api/licenses/activate — activate device, returns signed license envelope.
+    pub async fn license_activate(
+        &self,
+        payload: LicenseActivatePayload<'_>,
+    ) -> Result<LicenseActivateResponse, Error> {
+        self.do_request::<_, LicenseActivateResponse>(Method::POST, "/api/licenses/activate", Some(&payload))
+            .await
+    }
+
+    /// POST /api/licenses/refresh — refresh signed license envelope.
+    pub async fn license_refresh(
+        &self,
+        payload: LicenseRefreshPayload<'_>,
+    ) -> Result<LicenseActivateResponse, Error> {
+        self.do_request::<_, LicenseActivateResponse>(Method::POST, "/api/licenses/refresh", Some(&payload))
+            .await
+    }
+
+    /// GET /api/me/entitlements — full customer entitlement + device snapshot.
+    pub async fn entitlements(&self) -> Result<EntitlementsResponse, Error> {
+        self.do_request::<_, EntitlementsResponse>(Method::GET, "/api/me/entitlements", None::<&()>)
+            .await
+    }
+
+    /// GET /api/billing/portal — Stripe customer portal short-lived URL.
+    pub async fn billing_portal(&self, return_url: &str) -> Result<PortalLink, Error> {
+        let path = format!(
+            "/api/billing/portal?return_url={}",
+            urlencode(return_url),
+        );
+        self.do_request::<_, PortalLink>(Method::GET, &path, None::<&()>).await
+    }
+
+    /// GET /api/v1/license-keys/public — list registered Ed25519 verification keys.
+    /// Public endpoint, no HMAC or bearer required.
+    pub async fn public_license_keys(&self) -> Result<LicensePublicKeysResponse, Error> {
+        let url = format!("{}/api/v1/license-keys/public", self.base_url.trim_end_matches('/'));
+        let resp = self
+            .http
+            .get(&url)
+            .header(ACCEPT, "application/json")
+            .send()
+            .await?;
+        let status = resp.status();
+        let bytes = resp.bytes().await?;
+        if !status.is_success() {
+            let code = serde_json::from_slice::<serde_json::Value>(&bytes)
+                .ok()
+                .and_then(|v| v.get("error").and_then(|e| e.as_str()).map(String::from))
+                .unwrap_or_default();
+            return Err(Error::Api { status: status.as_u16(), code });
+        }
+        serde_json::from_slice::<LicensePublicKeysResponse>(&bytes).map_err(|e| Error::Api {
+            status: status.as_u16(),
+            code: format!("decode response: {e}"),
+        })
+    }
+
     async fn do_request<B: serde::Serialize, T: DeserializeOwned>(
         &self,
         method: Method,
@@ -169,4 +243,16 @@ fn header_value(s: &str) -> Result<HeaderValue, Error> {
         status: 0,
         code: "invalid header value".into(),
     })
+}
+
+fn urlencode(value: &str) -> String {
+    value
+        .bytes()
+        .map(|b| match b {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
+                (b as char).to_string()
+            }
+            _ => format!("%{b:02X}"),
+        })
+        .collect()
 }
