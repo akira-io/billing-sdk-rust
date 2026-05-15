@@ -221,6 +221,12 @@ pub struct UsagePayload<'a> {
     pub date: &'a str,
     pub device_fp: &'a str,
     pub action: &'a str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub platform: Option<&'a str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub device_type: Option<&'a str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub app_version: Option<&'a str>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
