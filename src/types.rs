@@ -21,7 +21,8 @@ pub struct ApiPlan {
     pub currency: Option<String>,
     pub billing_interval: Option<String>,
     pub trial_period_days: u32,
-    pub stripe_price_id: Option<String>,
+    #[serde(default)]
+    pub is_coming_soon: bool,
     pub features: Vec<ApiPlanFeature>,
 }
 
