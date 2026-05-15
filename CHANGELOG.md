@@ -4,6 +4,15 @@ All notable changes to `akira-billing` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the crate adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.5] — 2026-05-15
+
+### Changed
+
+- Version bump to align all three SDKs (JS, Rust, Go) on the same
+  release number. No code or API changes.
+
+[0.1.5]: https://github.com/akira-io/billing-sdk-rust/releases/tag/v0.1.5
+
 ## [0.1.4] — 2026-05-15
 
 ### Changed
