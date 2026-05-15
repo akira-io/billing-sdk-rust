@@ -34,6 +34,42 @@ pub struct ApiPlanFeature {
 }
 
 #[derive(Debug, Clone, Deserialize)]
+pub struct ReleaseAsset {
+    pub os: String,
+    pub arch: String,
+    pub format: String,
+    pub object_key: String,
+    pub size_bytes: i64,
+    pub sha256: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct ReleaseManifest {
+    pub version: String,
+    pub channel: String,
+    pub released_at: String,
+    pub notes_url: Option<String>,
+    pub assets: Vec<ReleaseAsset>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IssuedDownload {
+    pub event_id: String,
+    pub product: String,
+    pub version: String,
+    pub channel: String,
+    pub os: String,
+    pub arch: String,
+    pub format: String,
+    pub size_bytes: i64,
+    pub sha256: String,
+    pub signed_url: String,
+    pub expires_at: String,
+    pub beacon_url: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
 pub struct IssuedTrial {
     pub product: String,
     pub plan: Option<String>,

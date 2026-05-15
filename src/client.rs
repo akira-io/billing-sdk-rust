@@ -6,7 +6,10 @@ use serde::de::DeserializeOwned;
 
 use crate::error::Error;
 use crate::signature::{canonical, new_nonce, sign};
-use crate::types::{IssuedTrial, OtpRequestPayload, OtpVerifyPayload, OtpVerifyResponse, PlansResponse};
+use crate::types::{
+    IssuedDownload, IssuedTrial, OtpRequestPayload, OtpVerifyPayload, OtpVerifyResponse,
+    PlansResponse, ReleaseManifest,
+};
 
 const H_PRODUCT: HeaderName = HeaderName::from_static("x-akira-product");
 const H_TIMESTAMP: HeaderName = HeaderName::from_static("x-akira-timestamp");
@@ -35,6 +38,36 @@ impl Client {
 
     pub fn set_customer_token(&mut self, token: impl Into<String>) {
         self.customer_token = Some(token.into());
+    }
+
+    /// GET /api/v1/downloads/{product}/releases/{channel}/latest
+    pub async fn latest_release(&self, channel: &str) -> Result<ReleaseManifest, Error> {
+        let path = format!("/api/v1/downloads/{}/releases/{}/latest", self.product_slug, channel);
+        self.do_request::<_, ReleaseManifest>(Method::GET, &path, None::<&()>).await
+    }
+
+    /// GET /api/v1/downloads/{product}/{channel}/{platform} (Accept: application/json)
+    /// Platform is "os-arch", e.g. "macos-arm64".
+    pub async fn issue_download(&self, channel: &str, platform: &str) -> Result<IssuedDownload, Error> {
+        let path = format!("/api/v1/downloads/{}/{}/{}", self.product_slug, channel, platform);
+        self.do_request::<_, IssuedDownload>(Method::GET, &path, None::<&()>).await
+    }
+
+    /// Posts the completion beacon for an issued event. The URL is the
+    /// absolute beacon_url returned in IssuedDownload, including the sig
+    /// query string. No HMAC signing required.
+    pub async fn complete_download(&self, beacon_url: &str) -> Result<(), Error> {
+        let resp = self.http.post(beacon_url).header(ACCEPT, "application/json").send().await?;
+        let status = resp.status();
+        if !status.is_success() {
+            let bytes = resp.bytes().await.unwrap_or_default();
+            let code = serde_json::from_slice::<serde_json::Value>(&bytes)
+                .ok()
+                .and_then(|v| v.get("error").and_then(|e| e.as_str()).map(String::from))
+                .unwrap_or_else(|| String::from_utf8_lossy(&bytes).into_owned());
+            return Err(Error::Api { status: status.as_u16(), code });
+        }
+        Ok(())
     }
 
     pub async fn plans(&self) -> Result<PlansResponse, Error> {
