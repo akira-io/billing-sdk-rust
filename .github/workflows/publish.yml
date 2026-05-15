@@ -10,7 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write
     steps:
       - uses: actions/checkout@v4
 
@@ -51,13 +50,8 @@ jobs:
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Authenticate to crates.io via Trusted Publishing
-        if: steps.version_check.outputs.skip != 'true'
-        uses: rust-lang/crates-io-auth-action@v1
-        id: auth
-
       - name: Publish to crates.io
         if: steps.version_check.outputs.skip != 'true'
         env:
-          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         run: cargo publish --no-verify
