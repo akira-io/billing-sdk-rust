@@ -53,6 +53,18 @@ impl Client {
         self.customer_token = None;
     }
 
+    pub fn base_url(&self) -> &str {
+        &self.base_url
+    }
+
+    pub fn product_slug(&self) -> &str {
+        &self.product_slug
+    }
+
+    pub fn customer_token(&self) -> Option<&str> {
+        self.customer_token.as_deref()
+    }
+
     /// GET /api/v1/downloads/{product}/releases/{channel}/latest
     pub async fn latest_release(&self, channel: &str) -> Result<ReleaseManifest, Error> {
         let path = format!(

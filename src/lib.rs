@@ -13,6 +13,12 @@ pub mod signature;
 pub mod types;
 pub mod usage;
 
+#[cfg(feature = "loopback")]
+pub mod loopback;
+
+#[cfg(feature = "desktop")]
+pub mod desktop;
+
 pub use client::Client;
 pub use error::Error;
 pub use gate::{FeatureAccess, Gate, GateDenied, GateError, GateOptions};

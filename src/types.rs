@@ -153,7 +153,7 @@ pub struct LicenseRefreshPayload<'a> {
     pub fingerprint: &'a str,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SignedLicense {
     pub key_id: String,
     pub algorithm: String,
