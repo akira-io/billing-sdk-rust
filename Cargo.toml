@@ -1,6 +1,6 @@
 [package]
 name = "akira-billing"
-version = "0.1.9"
+version = "0.2.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 description = "Go-Rust parity SDK for the Akira Billing API"
@@ -18,10 +18,13 @@ reqwest = { version = "0.12", default-features = false, features = ["json", "rus
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "1"
-tokio = { version = "1", features = ["macros", "rt"], optional = true }
+tokio = { version = "1", features = ["macros", "rt", "rt-multi-thread", "sync", "time"], optional = true }
+async-trait = "0.1"
+futures = "0.3"
 
 [dev-dependencies]
 serde_json = "1"
+tokio = { version = "1", features = ["macros", "rt", "rt-multi-thread", "sync", "time"] }
 
 [features]
 default = ["tokio"]

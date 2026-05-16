@@ -24,7 +24,14 @@ fn load_vectors() -> Vec<Vector> {
 #[test]
 fn canonical_matches_fixtures() {
     for v in load_vectors() {
-        let got = canonical(&v.product, v.timestamp, &v.nonce, &v.method, &v.path, v.body.as_bytes());
+        let got = canonical(
+            &v.product,
+            v.timestamp,
+            &v.nonce,
+            &v.method,
+            &v.path,
+            v.body.as_bytes(),
+        );
         assert_eq!(got, v.canonical, "canonical mismatch in {}", v.name);
     }
 }
@@ -32,7 +39,14 @@ fn canonical_matches_fixtures() {
 #[test]
 fn signature_matches_fixtures() {
     for v in load_vectors() {
-        let canon = canonical(&v.product, v.timestamp, &v.nonce, &v.method, &v.path, v.body.as_bytes());
+        let canon = canonical(
+            &v.product,
+            v.timestamp,
+            &v.nonce,
+            &v.method,
+            &v.path,
+            v.body.as_bytes(),
+        );
         let got = sign(&v.secret, &canon);
         assert_eq!(got, v.signature, "signature mismatch in {}", v.name);
     }
@@ -42,5 +56,7 @@ fn signature_matches_fixtures() {
 fn nonce_is_32_hex_chars() {
     let nonce = akira_billing::new_nonce();
     assert_eq!(nonce.len(), 32);
-    assert!(nonce.chars().all(|c| c.is_ascii_hexdigit() && (c.is_ascii_digit() || c.is_ascii_lowercase())));
+    assert!(nonce
+        .chars()
+        .all(|c| c.is_ascii_hexdigit() && (c.is_ascii_digit() || c.is_ascii_lowercase())));
 }

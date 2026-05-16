@@ -24,10 +24,12 @@ pub struct DecodedLicense {
 }
 
 pub fn decode_license(signed: &SignedLicense) -> Result<DecodedLicense, Error> {
-    let payload_bytes = B64.decode(signed.payload.as_bytes()).map_err(|e| Error::Api {
-        status: 0,
-        code: format!("decode payload b64: {e}"),
-    })?;
+    let payload_bytes = B64
+        .decode(signed.payload.as_bytes())
+        .map_err(|e| Error::Api {
+            status: 0,
+            code: format!("decode payload b64: {e}"),
+        })?;
     let payload: LicenseSnapshotPayload =
         serde_json::from_slice(&payload_bytes).map_err(|e| Error::Api {
             status: 0,
@@ -44,18 +46,24 @@ pub fn verify_license(signed: &SignedLicense, public_key_b64: &str) -> Result<bo
         return Ok(false);
     }
 
-    let payload_bytes = B64.decode(signed.payload.as_bytes()).map_err(|e| Error::Api {
-        status: 0,
-        code: format!("decode payload b64: {e}"),
-    })?;
-    let sig_bytes = B64.decode(signed.signature.as_bytes()).map_err(|e| Error::Api {
-        status: 0,
-        code: format!("decode signature b64: {e}"),
-    })?;
-    let pk_bytes = B64.decode(public_key_b64.as_bytes()).map_err(|e| Error::Api {
-        status: 0,
-        code: format!("decode public key b64: {e}"),
-    })?;
+    let payload_bytes = B64
+        .decode(signed.payload.as_bytes())
+        .map_err(|e| Error::Api {
+            status: 0,
+            code: format!("decode payload b64: {e}"),
+        })?;
+    let sig_bytes = B64
+        .decode(signed.signature.as_bytes())
+        .map_err(|e| Error::Api {
+            status: 0,
+            code: format!("decode signature b64: {e}"),
+        })?;
+    let pk_bytes = B64
+        .decode(public_key_b64.as_bytes())
+        .map_err(|e| Error::Api {
+            status: 0,
+            code: format!("decode public key b64: {e}"),
+        })?;
 
     let pk_arr: [u8; 32] = pk_bytes.as_slice().try_into().map_err(|_| Error::Api {
         status: 0,
@@ -161,7 +169,9 @@ pub fn deltas() -> HashMap<String, u64> {
 }
 
 fn parse_iso(s: &str) -> Option<DateTime<Utc>> {
-    DateTime::parse_from_rfc3339(s).ok().map(|d| d.with_timezone(&Utc))
+    DateTime::parse_from_rfc3339(s)
+        .ok()
+        .map(|d| d.with_timezone(&Utc))
 }
 
 #[allow(dead_code)]

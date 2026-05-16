@@ -4,6 +4,30 @@ All notable changes to `akira-billing` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the crate adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] — 2026-05-16
+
+### Added
+
+- `Gate` struct (`gate.rs`) bundling verify + lifecycle state +
+  `compute_remaining` behind a single `check(feature)` call. `require(feature)`
+  returns `GateError::Denied(GateDenied)` on failure. Configurable via
+  `GateOptions { loader, local_consumption, grace_window, now }`.
+- `FeatureAccess` with `allowed`, `has_feature`, `unlimited`, `remaining`,
+  `reason`, `plan`, `state`. Pattern match `GateError::Denied(_)` for
+  type-safe denial handling.
+- `LicenseState` enum (`None|Invalid|Active|Trialing|Grace|Expired`) plus
+  `compute_state(payload, grace, now)` and `trial_days_left(payload, now)`.
+  Trial detected via feature `__trial=true` or plan key suffix `:trial`.
+- `UsageTracker` (`usage.rs`) with `UsageBuffer` async trait (`add`, `drain`,
+  `restore`) for buffered counter sync. `track`, `flush`, `start`, `stop`;
+  default 5min interval. `MemoryBuffer` reference impl. Requires the tracker
+  to be wrapped in `Arc<UsageTracker>` when using `start`.
+
+### Changed
+
+- `Cargo.toml`: added `async-trait`, `futures`; expanded `tokio` features
+  (`rt-multi-thread`, `sync`, `time`).
+
 ## [0.1.8] — 2026-05-16
 
 ### Added

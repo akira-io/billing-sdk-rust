@@ -4,7 +4,9 @@ use akira_billing::license::{
     can_use_update, compute_remaining, decode_license, is_expired, is_in_grace, period_reset_at,
     verify_license, RemainingValue,
 };
-use akira_billing::types::{LicenseSnapshotPayload, LicensingMode, SignedLicense, UsageFeatureState, UsagePeriod};
+use akira_billing::types::{
+    LicenseSnapshotPayload, LicensingMode, SignedLicense, UsageFeatureState, UsagePeriod,
+};
 use base64::engine::general_purpose::STANDARD as B64;
 use base64::Engine as _;
 use chrono::{DateTime, Utc};
@@ -91,9 +93,18 @@ fn verify_license_rejects_non_ed25519() {
 #[test]
 fn compute_remaining_subtracts_local_consumed() {
     let p = base_payload();
-    assert_eq!(compute_remaining(&p, "agent_run", 0), Some(RemainingValue::Finite(3)));
-    assert_eq!(compute_remaining(&p, "agent_run", 2), Some(RemainingValue::Finite(1)));
-    assert_eq!(compute_remaining(&p, "agent_run", 100), Some(RemainingValue::Finite(0)));
+    assert_eq!(
+        compute_remaining(&p, "agent_run", 0),
+        Some(RemainingValue::Finite(3))
+    );
+    assert_eq!(
+        compute_remaining(&p, "agent_run", 2),
+        Some(RemainingValue::Finite(1))
+    );
+    assert_eq!(
+        compute_remaining(&p, "agent_run", 100),
+        Some(RemainingValue::Finite(0))
+    );
     assert_eq!(compute_remaining(&p, "ghost", 0), None);
 }
 
@@ -128,8 +139,16 @@ fn expiry_and_grace() {
     assert!(!is_expired(&p, Some(inside)));
     assert!(is_expired(&p, Some(after)));
 
-    assert!(is_in_grace(&p, 7 * 24 * 3600, Some("2026-06-02T00:00:00Z".parse().unwrap())));
-    assert!(!is_in_grace(&p, 7 * 24 * 3600, Some("2026-06-08T00:00:00Z".parse().unwrap())));
+    assert!(is_in_grace(
+        &p,
+        7 * 24 * 3600,
+        Some("2026-06-02T00:00:00Z".parse().unwrap())
+    ));
+    assert!(!is_in_grace(
+        &p,
+        7 * 24 * 3600,
+        Some("2026-06-08T00:00:00Z".parse().unwrap())
+    ));
 }
 
 #[test]

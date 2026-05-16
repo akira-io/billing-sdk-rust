@@ -31,7 +31,11 @@ pub struct Client {
 }
 
 impl Client {
-    pub fn new(base_url: impl Into<String>, product_slug: impl Into<String>, product_secret: impl Into<String>) -> Self {
+    pub fn new(
+        base_url: impl Into<String>,
+        product_slug: impl Into<String>,
+        product_secret: impl Into<String>,
+    ) -> Self {
         Self {
             base_url: base_url.into(),
             product_slug: product_slug.into(),
@@ -51,22 +55,39 @@ impl Client {
 
     /// GET /api/v1/downloads/{product}/releases/{channel}/latest
     pub async fn latest_release(&self, channel: &str) -> Result<ReleaseManifest, Error> {
-        let path = format!("/api/v1/downloads/{}/releases/{}/latest", self.product_slug, channel);
-        self.do_request::<_, ReleaseManifest>(Method::GET, &path, None::<&()>).await
+        let path = format!(
+            "/api/v1/downloads/{}/releases/{}/latest",
+            self.product_slug, channel
+        );
+        self.do_request::<_, ReleaseManifest>(Method::GET, &path, None::<&()>)
+            .await
     }
 
     /// GET /api/v1/downloads/{product}/{channel}/{platform} (Accept: application/json)
     /// Platform is "os-arch", e.g. "macos-arm64".
-    pub async fn issue_download(&self, channel: &str, platform: &str) -> Result<IssuedDownload, Error> {
-        let path = format!("/api/v1/downloads/{}/{}/{}", self.product_slug, channel, platform);
-        self.do_request::<_, IssuedDownload>(Method::GET, &path, None::<&()>).await
+    pub async fn issue_download(
+        &self,
+        channel: &str,
+        platform: &str,
+    ) -> Result<IssuedDownload, Error> {
+        let path = format!(
+            "/api/v1/downloads/{}/{}/{}",
+            self.product_slug, channel, platform
+        );
+        self.do_request::<_, IssuedDownload>(Method::GET, &path, None::<&()>)
+            .await
     }
 
     /// Posts the completion beacon for an issued event. The URL is the
     /// absolute beacon_url returned in IssuedDownload, including the sig
     /// query string. No HMAC signing required.
     pub async fn complete_download(&self, beacon_url: &str) -> Result<(), Error> {
-        let resp = self.http.post(beacon_url).header(ACCEPT, "application/json").send().await?;
+        let resp = self
+            .http
+            .post(beacon_url)
+            .header(ACCEPT, "application/json")
+            .send()
+            .await?;
         let status = resp.status();
         if !status.is_success() {
             let bytes = resp.bytes().await.unwrap_or_default();
@@ -74,31 +95,47 @@ impl Client {
                 .ok()
                 .and_then(|v| v.get("error").and_then(|e| e.as_str()).map(String::from))
                 .unwrap_or_else(|| String::from_utf8_lossy(&bytes).into_owned());
-            return Err(Error::Api { status: status.as_u16(), code });
+            return Err(Error::Api {
+                status: status.as_u16(),
+                code,
+            });
         }
         Ok(())
     }
 
     pub async fn plans(&self) -> Result<PlansResponse, Error> {
         let path = format!("/api/v1/products/{}/plans", self.product_slug);
-        self.do_request::<_, PlansResponse>(Method::GET, &path, None::<&()>).await
+        self.do_request::<_, PlansResponse>(Method::GET, &path, None::<&()>)
+            .await
     }
 
     pub async fn start_trial(&self, plan_key: Option<&str>) -> Result<IssuedTrial, Error> {
         let path = format!("/api/v1/me/products/{}/trial", self.product_slug);
         let body = plan_key.map(|p| serde_json::json!({ "plan": p }));
-        self.do_request::<_, IssuedTrial>(Method::POST, &path, body.as_ref()).await
+        self.do_request::<_, IssuedTrial>(Method::POST, &path, body.as_ref())
+            .await
     }
 
     pub async fn request_otp(&self, payload: OtpRequestPayload<'_>) -> Result<(), Error> {
-        self.do_request::<_, serde_json::Value>(Method::POST, "/api/auth/customer/otp/request", Some(&payload))
-            .await
-            .map(|_| ())
+        self.do_request::<_, serde_json::Value>(
+            Method::POST,
+            "/api/auth/customer/otp/request",
+            Some(&payload),
+        )
+        .await
+        .map(|_| ())
     }
 
-    pub async fn verify_otp(&mut self, payload: OtpVerifyPayload<'_>) -> Result<OtpVerifyResponse, Error> {
+    pub async fn verify_otp(
+        &mut self,
+        payload: OtpVerifyPayload<'_>,
+    ) -> Result<OtpVerifyResponse, Error> {
         let resp = self
-            .do_request::<_, OtpVerifyResponse>(Method::POST, "/api/auth/customer/otp/verify", Some(&payload))
+            .do_request::<_, OtpVerifyResponse>(
+                Method::POST,
+                "/api/auth/customer/otp/verify",
+                Some(&payload),
+            )
             .await?;
         self.set_customer_token(resp.access_token.clone());
 
@@ -107,7 +144,8 @@ impl Client {
 
     /// GET /api/me — current authenticated customer.
     pub async fn customer_me(&self) -> Result<Customer, Error> {
-        self.do_request::<_, Customer>(Method::GET, "/api/me", None::<&()>).await
+        self.do_request::<_, Customer>(Method::GET, "/api/me", None::<&()>)
+            .await
     }
 
     /// POST /api/licenses/check — runtime feature gate check.
@@ -115,8 +153,12 @@ impl Client {
         &self,
         payload: LicenseCheckPayload<'_>,
     ) -> Result<LicenseCheckResponse, Error> {
-        self.do_request::<_, LicenseCheckResponse>(Method::POST, "/api/licenses/check", Some(&payload))
-            .await
+        self.do_request::<_, LicenseCheckResponse>(
+            Method::POST,
+            "/api/licenses/check",
+            Some(&payload),
+        )
+        .await
     }
 
     /// POST /api/licenses/activate — activate device, returns signed license envelope.
@@ -124,8 +166,12 @@ impl Client {
         &self,
         payload: LicenseActivatePayload<'_>,
     ) -> Result<LicenseActivateResponse, Error> {
-        self.do_request::<_, LicenseActivateResponse>(Method::POST, "/api/licenses/activate", Some(&payload))
-            .await
+        self.do_request::<_, LicenseActivateResponse>(
+            Method::POST,
+            "/api/licenses/activate",
+            Some(&payload),
+        )
+        .await
     }
 
     /// POST /api/licenses/refresh — refresh signed license envelope.
@@ -133,21 +179,33 @@ impl Client {
         &self,
         payload: LicenseRefreshPayload<'_>,
     ) -> Result<LicenseActivateResponse, Error> {
-        self.do_request::<_, LicenseActivateResponse>(Method::POST, "/api/licenses/refresh", Some(&payload))
-            .await
+        self.do_request::<_, LicenseActivateResponse>(
+            Method::POST,
+            "/api/licenses/refresh",
+            Some(&payload),
+        )
+        .await
     }
 
     pub async fn license_sync_usage(
         &self,
         payload: LicenseSyncUsagePayload<'_>,
     ) -> Result<LicenseSyncUsageResponse, Error> {
-        self.do_request::<_, LicenseSyncUsageResponse>(Method::POST, "/api/licenses/sync-usage", Some(&payload))
-            .await
+        self.do_request::<_, LicenseSyncUsageResponse>(
+            Method::POST,
+            "/api/licenses/sync-usage",
+            Some(&payload),
+        )
+        .await
     }
 
-    pub async fn list_oauth_providers(&self, product: &str) -> Result<OauthProvidersResponse, Error> {
+    pub async fn list_oauth_providers(
+        &self,
+        product: &str,
+    ) -> Result<OauthProvidersResponse, Error> {
         let path = format!("/api/v1/products/{}/auth/providers", urlencode(product));
-        self.do_request::<_, OauthProvidersResponse>(Method::GET, &path, None::<&()>).await
+        self.do_request::<_, OauthProvidersResponse>(Method::GET, &path, None::<&()>)
+            .await
     }
 
     pub async fn exchange_oauth_code(
@@ -155,7 +213,11 @@ impl Client {
         payload: OauthExchangePayload<'_>,
     ) -> Result<OauthExchangeResponse, Error> {
         let resp = self
-            .do_request::<_, OauthExchangeResponse>(Method::POST, "/api/auth/oauth/exchange", Some(&payload))
+            .do_request::<_, OauthExchangeResponse>(
+                Method::POST,
+                "/api/auth/oauth/exchange",
+                Some(&payload),
+            )
             .await?;
         self.set_customer_token(resp.access_token.clone());
 
@@ -191,11 +253,9 @@ impl Client {
 
     /// GET /api/billing/portal — Stripe customer portal short-lived URL.
     pub async fn billing_portal(&self, return_url: &str) -> Result<PortalLink, Error> {
-        let path = format!(
-            "/api/billing/portal?return_url={}",
-            urlencode(return_url),
-        );
-        self.do_request::<_, PortalLink>(Method::GET, &path, None::<&()>).await
+        let path = format!("/api/billing/portal?return_url={}", urlencode(return_url),);
+        self.do_request::<_, PortalLink>(Method::GET, &path, None::<&()>)
+            .await
     }
 
     /// POST /api/me/usage — check or increment per-day usage counter.
@@ -231,7 +291,10 @@ impl Client {
                 .ok()
                 .and_then(|v| v.get("error").and_then(|e| e.as_str()).map(String::from))
                 .unwrap_or_default();
-            return Err(Error::Api { status: status.as_u16(), code });
+            return Err(Error::Api {
+                status: status.as_u16(),
+                code,
+            });
         }
         serde_json::from_slice::<GithubAppInfo>(&bytes).map_err(|e| Error::Api {
             status: status.as_u16(),
@@ -242,7 +305,10 @@ impl Client {
     /// GET /api/v1/license-keys/public — list registered Ed25519 verification keys.
     /// Public endpoint, no HMAC or bearer required.
     pub async fn public_license_keys(&self) -> Result<LicensePublicKeysResponse, Error> {
-        let url = format!("{}/api/v1/license-keys/public", self.base_url.trim_end_matches('/'));
+        let url = format!(
+            "{}/api/v1/license-keys/public",
+            self.base_url.trim_end_matches('/')
+        );
         let resp = self
             .http
             .get(&url)
@@ -256,7 +322,10 @@ impl Client {
                 .ok()
                 .and_then(|v| v.get("error").and_then(|e| e.as_str()).map(String::from))
                 .unwrap_or_default();
-            return Err(Error::Api { status: status.as_u16(), code });
+            return Err(Error::Api {
+                status: status.as_u16(),
+                code,
+            });
         }
         serde_json::from_slice::<LicensePublicKeysResponse>(&bytes).map_err(|e| Error::Api {
             status: status.as_u16(),
@@ -319,10 +388,17 @@ impl Client {
 
         if !status.is_success() {
             let code = match serde_json::from_slice::<serde_json::Value>(&bytes) {
-                Ok(v) => v.get("error").and_then(|e| e.as_str()).unwrap_or("").to_string(),
+                Ok(v) => v
+                    .get("error")
+                    .and_then(|e| e.as_str())
+                    .unwrap_or("")
+                    .to_string(),
                 Err(_) => String::from_utf8_lossy(&bytes).into_owned(),
             };
-            return Err(Error::Api { status: status.as_u16(), code });
+            return Err(Error::Api {
+                status: status.as_u16(),
+                code,
+            });
         }
 
         serde_json::from_slice::<T>(&bytes).map_err(|e| Error::Api {
