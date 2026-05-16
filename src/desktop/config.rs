@@ -10,6 +10,11 @@ pub struct EnvSpec<'a> {
     pub release_default: Option<&'a str>,
 }
 
+/// Build the checkout URL for a given product on the billing site.
+pub fn checkout_url(base_url: &str, product: &str) -> String {
+    format!("{}/plans?product={}", base_url.trim_end_matches('/'), product)
+}
+
 pub fn env_with_debug_override(spec: EnvSpec<'_>) -> Option<String> {
     #[cfg(debug_assertions)]
     {

@@ -88,6 +88,8 @@ pub struct OtpRequestPayload<'a> {
     pub platform: Option<&'a str>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub app_version: Option<&'a str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub product_key: Option<&'a str>,
 }
 
 #[derive(Debug, Clone, Serialize)]
