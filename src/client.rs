@@ -7,12 +7,13 @@ use serde::de::DeserializeOwned;
 use crate::error::Error;
 use crate::signature::{canonical, new_nonce, sign};
 use crate::types::{
-    Customer, EntitlementsResponse, GithubInstallationTokenPayload,
-    GithubInstallationTokenResponse, IssuedDownload, IssuedTrial, LicenseActivatePayload,
-    LicenseActivateResponse, LicenseCheckPayload, LicenseCheckResponse, LicensePublicKeysResponse,
-    LicenseRefreshPayload, LicenseSyncUsagePayload, LicenseSyncUsageResponse, OauthExchangePayload,
-    OauthExchangeResponse, OauthProvidersResponse, OtpRequestPayload, OtpVerifyPayload,
-    OtpVerifyResponse, PlansResponse, PortalLink, ReleaseManifest, UsagePayload, UsageResponse,
+    Customer, EntitlementsResponse, GithubAppInfo, GithubInstallationTokenPayload,
+    GithubInstallationTokenResponse, GithubUserInstallationsResponse, IssuedDownload, IssuedTrial,
+    LicenseActivatePayload, LicenseActivateResponse, LicenseCheckPayload, LicenseCheckResponse,
+    LicensePublicKeysResponse, LicenseRefreshPayload, LicenseSyncUsagePayload,
+    LicenseSyncUsageResponse, OauthExchangePayload, OauthExchangeResponse, OauthProvidersResponse,
+    OtpRequestPayload, OtpVerifyPayload, OtpVerifyResponse, PlansResponse, PortalLink,
+    ReleaseManifest, UsagePayload, UsageResponse,
 };
 
 const H_PRODUCT: HeaderName = HeaderName::from_static("x-akira-product");
@@ -42,6 +43,10 @@ impl Client {
 
     pub fn set_customer_token(&mut self, token: impl Into<String>) {
         self.customer_token = Some(token.into());
+    }
+
+    pub fn clear_customer_token(&mut self) {
+        self.customer_token = None;
     }
 
     /// GET /api/v1/downloads/{product}/releases/{channel}/latest
@@ -169,6 +174,15 @@ impl Client {
         .await
     }
 
+    pub async fn me_github_installations(&self) -> Result<GithubUserInstallationsResponse, Error> {
+        self.do_request::<_, GithubUserInstallationsResponse>(
+            Method::GET,
+            "/api/me/github/installations",
+            None::<&()>,
+        )
+        .await
+    }
+
     /// GET /api/me/entitlements — full customer entitlement + device snapshot.
     pub async fn entitlements(&self) -> Result<EntitlementsResponse, Error> {
         self.do_request::<_, EntitlementsResponse>(Method::GET, "/api/me/entitlements", None::<&()>)
@@ -199,6 +213,30 @@ impl Client {
     ) -> Result<UsageResponse, Error> {
         self.do_request::<_, UsageResponse>(Method::POST, "/api/v1/usage/anonymous", Some(&payload))
             .await
+    }
+
+    /// GET /api/v1/github/app — public GitHub App metadata (slug + install URL).
+    pub async fn github_app_info(&self) -> Result<GithubAppInfo, Error> {
+        let url = format!("{}/api/v1/github/app", self.base_url.trim_end_matches('/'));
+        let resp = self
+            .http
+            .get(&url)
+            .header(ACCEPT, "application/json")
+            .send()
+            .await?;
+        let status = resp.status();
+        let bytes = resp.bytes().await?;
+        if !status.is_success() {
+            let code = serde_json::from_slice::<serde_json::Value>(&bytes)
+                .ok()
+                .and_then(|v| v.get("error").and_then(|e| e.as_str()).map(String::from))
+                .unwrap_or_default();
+            return Err(Error::Api { status: status.as_u16(), code });
+        }
+        serde_json::from_slice::<GithubAppInfo>(&bytes).map_err(|e| Error::Api {
+            status: status.as_u16(),
+            code: format!("decode response: {e}"),
+        })
     }
 
     /// GET /api/v1/license-keys/public — list registered Ed25519 verification keys.

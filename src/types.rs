@@ -381,6 +381,34 @@ pub struct GithubInstallationTokenPayload {
 }
 
 #[derive(Debug, Clone, Deserialize)]
+pub struct GithubAppInfo {
+    pub slug: String,
+    pub install_url: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct GithubUserSummary {
+    pub id: u64,
+    pub login: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct GithubUserInstallation {
+    pub id: u64,
+    pub html_url: String,
+    pub account_id: u64,
+    pub account_login: String,
+    pub account_type: String,
+    pub target_type: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct GithubUserInstallationsResponse {
+    pub user: GithubUserSummary,
+    pub installations: Vec<GithubUserInstallation>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
 pub struct GithubInstallationTokenResponse {
     pub token: String,
     pub expires_at: String,
