@@ -263,6 +263,12 @@ impl Client {
             .await
     }
 
+    pub async fn customer_features(&self, product: &str) -> Result<crate::types::CustomerFeaturesResponse, Error> {
+        let path = format!("/api/me/features?product={}", urlencode(product));
+        self.do_request::<_, crate::types::CustomerFeaturesResponse>(Method::GET, &path, None::<&()>)
+            .await
+    }
+
     /// GET /api/billing/portal — Stripe customer portal short-lived URL.
     pub async fn billing_portal(&self, return_url: &str) -> Result<PortalLink, Error> {
         let path = format!("/api/billing/portal?return_url={}", urlencode(return_url),);

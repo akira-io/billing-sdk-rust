@@ -199,6 +199,13 @@ pub struct EntitlementsResponse {
 }
 
 #[derive(Debug, Clone, Deserialize)]
+pub struct CustomerFeaturesResponse {
+    pub product: String,
+    #[serde(default)]
+    pub features: Vec<String>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
 pub struct PortalLink {
     pub url: String,
 }
