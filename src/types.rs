@@ -112,7 +112,7 @@ pub struct OtpCustomer {
     pub email: String,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Customer {
     pub id: String,
     pub email: String,
