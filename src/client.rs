@@ -264,7 +264,7 @@ impl Client {
     }
 
     pub async fn customer_features(&self, product: &str) -> Result<crate::types::CustomerFeaturesResponse, Error> {
-        let path = format!("/api/me/features?product={}", urlencode(product));
+        let path = format!("/api/me/features/{}", urlencode(product));
         self.do_request::<_, crate::types::CustomerFeaturesResponse>(Method::GET, &path, None::<&()>)
             .await
     }
