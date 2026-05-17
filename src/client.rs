@@ -409,6 +409,7 @@ impl Client {
                 Ok(v) => v
                     .get("error")
                     .and_then(|e| e.as_str())
+                    .or_else(|| v.get("message").and_then(|e| e.as_str()))
                     .unwrap_or("")
                     .to_string(),
                 Err(_) => String::from_utf8_lossy(&bytes).into_owned(),
